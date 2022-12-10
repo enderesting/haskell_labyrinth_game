@@ -1,0 +1,8 @@
+move lllluu
+save 05_saveout.map
+move uull
+load 05_saveout.map
+move rrruur
+save 05_saveout.map
+move lddlllllddddrrrrrr
+exit

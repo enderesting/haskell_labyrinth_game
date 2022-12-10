@@ -1,0 +1,6 @@
+move ll
+save 03_saveout.map
+move rrdd
+load 03_saveout.map
+move dd
+exit

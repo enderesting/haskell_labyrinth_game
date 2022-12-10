@@ -1,0 +1,5 @@
+move ddrr
+save 02_saveout.map
+move uu
+load 02_saveout.map
+exit
