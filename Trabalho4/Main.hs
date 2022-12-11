@@ -2,56 +2,86 @@ import Test.QuickCheck
 import System.Random ()
 import System.Environment (getArgs)
 import T3 (EstadoJogo(..), posicoesDe, inicializa, jogador, chaves, terminado, move)
-import Data.List (isPrefixOf)
+import Data.List (isPrefixOf,stripPrefix)
+
+import Debug.Trace (trace)
+debug :: c -> String -> c
+debug = flip trace
 
 {-
-main do block that
-- reads one arg (optional)  (use Maybe?)
+- reads one arg (optional), and then iteratively performs the following actions:
     - if has args, load associated map
     - if no args, load "default.map"
+    - will continue to call parseCmd until termination.
 -}
-
 main :: IO ()
 main =  do
         args <- getArgs -- text file name included in args
-        if null args -- if null, load default, else load whichever
-            then (do gameState <- loadGame "default.map"
-                     print gameState 
-                     putStrLn "default invoked")
-            else (do gameState <- loadGame $ head args
-                     print gameState
-                     putStrLn ("loaded:" ++ head args))
-        putStrLn "gimme a instruction:"
+        let gameState = if null args -- if null, load default, else load whichever
+            then loadGame "default.map"
+            else loadGame $ head args
+        loadedGame <- gameState
+        print loadedGame
         cmd <- getLine
-        parseCmd cmd
-        -- return()
+        parseCmd cmd loadedGame
 
-parseCmd :: String -> IO()
-parseCmd cmd 
-        | cmd == "exit" = putStrLn ("kill!")
-        | "move" `isPrefixOf` cmd = loop $ putStrLn ("Moving to" ++ fileName) -- TO DO
-        | "load" `isPrefixOf` cmd = loop $ putStrLn ("Loading to "  ++ fileName) -- TO DO
-        | "save" `isPrefixOf` cmd = loop $ putStrLn ("Saving to "  ++ fileName) -- TO DO
-        | otherwise = error "fucked up my guy"
-        where fileName = drop 5 cmd -- instructions are always 4 letters + " "
-              loop instruction = do instruction -- specified based on instruction. instruction is an IO a
-                                    putStrLn "gimme a instruction:"
+{-
+- reads a command and a game state, and then parse command correspondingly.
+    - valid commands: move <String>, save <FilePath>, load <FilePath>, exit
+- runs recursively until "exit" command is called.
+-}
+parseCmd :: String -> EstadoJogo -> IO()
+parseCmd cmd game
+        | cmd == "exit" = return () --putStrLn ("kill!")
+        -- the rest 
+        | "move " `isPrefixOf` cmd = loop $ do return $ move game args `debug` ("comand:" ++ cmd)
+        | "save " `isPrefixOf` cmd = loop $ do saveGame game args -- save the game
+        | otherwise = loop $ do {putStrLn "Invalid command. Please try again: "; return game}
+        where args = drop 5 cmd -- instructions are always 4 letters + " "
+              loop instruction = do newGame <- instruction -- specified based on instruction. instruction is an IO a
+                                    print newGame -- has to be new game
+                                    appendFile "history.txt" (show newGame)
+                                    --putStr "gimme a instruction:"
                                     newCmd <- getLine
-                                    parseCmd newCmd
+                                    parseCmd newCmd newGame
 
-
--- type FilePath = String
--- reads a String, and returns the IO EstadoJogo
+{-
+- takes the file name and returns a game state.
+-}
 loadGame :: FilePath -> IO EstadoJogo
 loadGame x = do
         content <- readFile x -- auto includes does not exist error report. we good
         let fileData = lines content
         let game = Game {maze = mz,
                          playerPos = read $ head fileData ::(Int,Int),
-                         keys = [],
+                         keys = fileData !! 1,
                          portals = posicoesDe mz '@'}
                         where mz = drop 2 fileData
-        return game
+        return game --returns new loaded game
+
+{-
+- takes the file name and a game state, saves current game state into the file.
+-}
+saveGame :: EstadoJogo -> FilePath -> IO EstadoJogo
+saveGame game@(Game maze playerPos keys _) saveTo = 
+        do writeFile saveTo $ unlines [show playerPos,keys] ++ unlines maze -- save to file
+           return game -- returns the same game
+
+{-
+savein.map: load from this file
+input.txt: list of commands
+--
+output: history, only prints map
+check: expected output
+--
+saveout.map: saved map file (playerPos, keys, maze)
+savecheck.txt: expected saved map
+
+quick ref to debug commands:
+./Main 04_savein.map < 04_input.txt > 04_output.txt
+diff 04_output.txt 04_check.txt
+diff 04_saveout.map 04_savecheck.map
+-}
 
 {-
 LOOP:
