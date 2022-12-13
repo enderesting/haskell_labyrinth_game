@@ -1,9 +1,13 @@
 -- Autor: Yichen Cao        FC58165
 --        Gonçalo Fernandes FC58194
+
 import Test.QuickCheck
 -- import System.Random ()
 import System.Environment (getArgs)
 import T3 (EstadoJogo(..), posicoesDe, move)
+import Tests (prop_move_door_without_key, prop_move_picks_key, prop_move_exists,
+              prop_move_portals, prop_move_number_of_doors, prop_move_keys,
+              prop_move_limits,prop_move_dimensions)
 import Data.List (isPrefixOf)
 import System.Directory (doesFileExist)
 
@@ -29,14 +33,34 @@ main =  do
 processArgs :: [String] -> IO ()
 processArgs args 
              | length args > 1 = putStrLn ("Too many args. \n" ++ helpMenu )
-             | file == "-t" = do putStrLn "temp testing" 
+             | file == "-t" = runTest 
              | file == "help" = putStrLn helpMenu
              | fileExists <- doesFileExist $ head args = loadFiles file
              | otherwise = putStrLn ("\""++file ++ "\" does not exist." ++ helpMenu )--loadGame $ head args
              where file = head args
 
+-- runs quickcheck tests
+runTest :: IO ()
+runTest = do
+    putStrLn "Checks if the dimensions of the game stay the same after moving."
+    quickCheck prop_move_dimensions
+    putStrLn "Checks if the player stays in bounds after moving."
+    quickCheck prop_move_limits
+    putStrLn "Checks if the number of keys the player doesnt decrease after moving."
+    quickCheck prop_move_keys
+    putStrLn "Checks if the player still exists after moving."
+    quickCheck prop_move_exists
+    putStrLn "Checks if the portals stayed consistent after moving."
+    quickCheck prop_move_portals
+    putStrLn "Checks if the number of doors after a move doesnt increase."
+    quickCheck prop_move_number_of_doors
+    putStrLn "Checks if the player stays in place when moving against a locked door."
+    quickCheck prop_move_door_without_key
+    putStrLn "Checks if the keys array increases when the player picks up a key."
+    quickCheck prop_move_picks_key
 
--- loads a file, assumeing is correctly formatted. then continue to 
+-- loads a file, assuming it is correctly formatted. 
+-- Then continue to ask for another command
 loadFiles :: String -> IO()
 loadFiles fileName = do
                     let gameState = if null fileName -- if null, load default, else load whichever
