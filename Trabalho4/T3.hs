@@ -1,8 +1,9 @@
 -- Autor: Yichen Cao        FC58165
 --        Gonçalo Fernandes FC58194
+
 module T3
 (
-    EstadoJogo(..), posicoesDe, inicializa, jogador, chaves, terminado, move
+    EstadoJogo(..), posicoesDe, inicializa, jogador, chaves, terminado, move, placeAt,direction
 )where
 
 ----------------------- 
