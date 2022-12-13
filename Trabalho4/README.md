@@ -15,9 +15,9 @@ be sure you have all the "check" files, "input" files and Main.hs compiled
 compiling:
 > ghc --make Main.hs
 run and comparison:
-> ./Main 03_savein.map < 03_input.txt > 03_output.txt
-> diff 03_output.txt 03_check.txt
-> diff 03_saveout.map 03_savecheck.map
+> ./Main 01_savein.map < 01_input.txt > 01_output.txt
+> diff 01_output.txt 01_check.txt
+> diff 01_saveout.map 01_savecheck.map
 
 ----------[notes, troubleshooting, questions]---------------
 
